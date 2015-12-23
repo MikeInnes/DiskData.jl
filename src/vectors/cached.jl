@@ -20,31 +20,33 @@ function touch!{T}(c::CacheStack{T}, x::T)
   return load!(x)
 end
 
+@enum CacheState Stored Loaded Modified
+
 type CacheVector{T,A} <: AVector{T}
   cache::CacheStack{CacheVector{T,A}}
   data::A
   view::Vector{T}
-  hash::UInt64
+  state::CacheState
 end
 
 CacheVector(c::CacheStack, xs::AVector) =
-  CacheVector(c, xs, eltype(xs)[], UInt64(0))
+  CacheVector(c, xs, eltype(xs)[], Stored)
 
 CacheVector{T,A}(c::CacheStack{CacheVector{T,A}}) = CacheVector(c, A())
 
-isloaded(v::CacheVector) = v.hash ≠ 0
+isloaded(v::CacheVector) = v.state ≠ Stored
 
 function load!(v::CacheVector)
   isloaded(v) && return v
   info("loading data")
   v.view = collect(v.data)
-  v.hash = hash(v.view)
+  v.state = Loaded
   return v
 end
 
 function store!(v::CacheVector)
   isloaded(v) || return v
-  if hash(v.view) ≠ v.hash
+  if v.state == Modified
     info("storing data")
     v.data[1:end] = slice(v.view, 1:endof(v.data))
     if length(v.view) > length(v.data)
@@ -53,15 +55,23 @@ function store!(v::CacheVector)
     # TODO: catch shortened arrays as well
   end
   v.view = []
-  v.hash = 0
+  v.state = Stored
   return v
 end
 
 touch!(v::CacheVector) = touch!(v.cache, v)
 
-for f in :[Base.getindex, Base.setindex!, Base.push!, Base.size].args
+for f in :[Base.getindex, Base.size].args
   @eval function $f(xs::CacheVector, args...)
     touch!(xs)
+    $f(xs.view, args...)
+  end
+end
+
+for f in :[Base.setindex!, Base.push!].args
+  @eval function $f(xs::CacheVector, args...)
+    touch!(xs)
+    xs.state = Modified
     $f(xs.view, args...)
   end
 end

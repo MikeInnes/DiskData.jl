@@ -50,8 +50,6 @@ end
     :(index_slow(xs, i))
 end
 
-xs = ChunkedVector(1:100)
-
 function Base.getindex(xs::ChunkedVector, i::Integer)
   j, i′ = index(xs, i)
   xs.data[j][i′]

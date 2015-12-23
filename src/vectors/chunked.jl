@@ -13,7 +13,8 @@ call{T,A}(::ChunkedVectorT{T,A}, data = A[A()]) =
 call{T}(::ChunkedVectorT{T}, a...) =
   ChunkedVector{T,Vector{T}}(a...)
 
-chunksize{T,A,N}(::ChunkedVector{T,A,N}) = N
+chunksize{T,A,N}(::Type{ChunkedVector{T,A,N}}) = N
+chunksize(xs::ChunkedVector) = chunksize(typeof(xs))
 
 function makeroom!(xs::ChunkedVector)
   push!(xs.data, similar(xs.data[end], 0))
@@ -33,10 +34,23 @@ function ChunkedVector(xs, a...)
   return v
 end
 
-function index(xs::ChunkedVector, i)
+function index_slow(xs::ChunkedVector, i)
   j, i′ = divrem(i-1, chunksize(xs))
   j + 1, i′ + 1
 end
+
+@generated function index_fast(xs::ChunkedVector, i)
+  pow = round(Int, log2(chunksize(xs)))
+  :((i-1) >> $pow + 1, (i-1) & $(2^pow-1) + 1)
+end
+
+@generated function index(xs::ChunkedVector, i)
+  ispow2(chunksize(xs)) ?
+    :(index_fast(xs, i)) :
+    :(index_slow(xs, i))
+end
+
+xs = ChunkedVector(1:100)
 
 function Base.getindex(xs::ChunkedVector, i::Integer)
   j, i′ = index(xs, i)

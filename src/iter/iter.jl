@@ -2,22 +2,24 @@ using MacroTools
 
 # Forwarding iteration
 
+immutable SubIter{I,S}
+  iter::I
+  state::S
+end
+
 macro iter(ex, it)
   @capture(ex, x_::T_) || error("Use @iter x::T ...")
   quote
     @inline function Base.start($x::$T)
       it = $it
-      it, Base.start(it)
+      SubIter(it, Base.start(it))
     end
-    @inline function Base.next(::$T, sub)
-      it, state = sub
-      next, state = Base.next(it, state)
-      next, (it, state)
+    @inline function Base.next(::$T, sub::SubIter)
+      next, state = Base.next(sub.iter, sub.state)
+      next, SubIter(sub.iter, state)
     end
-    @inline function Base.done(::$T, sub)
-      it, state = sub
-      it, state
-      Base.done(it, state)
+    @inline function Base.done(::$T, sub::SubIter)
+      Base.done(sub.iter, sub.state)
     end
   end |> esc
 end

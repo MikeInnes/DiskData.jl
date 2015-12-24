@@ -1,5 +1,7 @@
 using MacroTools
 
+# Forwarding iteration
+
 macro iter(ex, it)
   @capture(ex, x_::T_) || error("Use @iter x::T ...")
   quote
@@ -19,6 +21,8 @@ macro iter(ex, it)
     end
   end |> esc
 end
+
+# Nested Iteration
 
 immutable NestedIter{I}
   it::I
@@ -44,4 +48,18 @@ end
   end
   x, substate = next(sub, substate)
   x, (state, sub, substate)
+end
+
+# Lazy Map
+
+immutable Map{F,T}
+  f::F
+  xs::T
+end
+
+@forward Map.xs Base.start, Base.done
+
+function Base.next(m::Map, state)
+  x, state = next(m.xs, state)
+  return m.f(x), state
 end

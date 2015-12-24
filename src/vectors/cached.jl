@@ -8,7 +8,6 @@ typealias CacheStackT{T} Type{CacheStack{T}}
 call{T}(::CacheStackT{T}, size = 1) = CacheStack{T}(size, T[])
 
 function touch!{T}(c::CacheStack{T}, x::T)
-  @assert c.size == 1
   if isempty(c.stack)
     push!(c.stack, x)
   elseif c.stack[1] === x
@@ -62,14 +61,14 @@ end
 touch!(v::CacheVector) = touch!(v.cache, v)
 
 for f in :[Base.getindex, Base.size].args
-  @eval function $f(xs::CacheVector, args...)
+  @eval @inline function $f(xs::CacheVector, args...)
     touch!(xs)
     $f(xs.view, args...)
   end
 end
 
 for f in :[Base.setindex!, Base.push!].args
-  @eval function $f(xs::CacheVector, args...)
+  @eval @inline function $f(xs::CacheVector, args...)
     touch!(xs)
     xs.state = Modified
     $f(xs.view, args...)

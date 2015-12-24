@@ -1,4 +1,5 @@
 import Base: start, next, done
+export aggregate
 
 type Circle{T}
   xs::Vector{T}

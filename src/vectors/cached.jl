@@ -8,6 +8,7 @@ typealias CacheStackT{T} Type{CacheStack{T}}
 call{T}(::CacheStackT{T}, size = 1) = CacheStack{T}(size, T[])
 
 function touch!{T}(c::CacheStack{T}, x::T)
+  isloaded(x) && return x
   if isempty(c.stack)
     push!(c.stack, x)
   elseif c.stack[1] === x

@@ -7,8 +7,8 @@ immutable SubIter{I,S}
   state::S
 end
 
-macro iter(ex, it)
-  @capture(ex, x_::T_) || error("Use @iter x::T ...")
+macro iter(ex)
+  @capture(ex, x_::T_ -> it_) || error("Use @iter x::T -> y ...")
   quote
     @inline function Base.start($x::$T)
       it = $it
@@ -56,4 +56,4 @@ end
 #   x::T
 # end
 #
-# @iter x::VecRef2 x.x
+# @iter x::VecRef2 -> x.x

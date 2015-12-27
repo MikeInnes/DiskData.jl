@@ -1,3 +1,5 @@
+export ChunkedVector
+
 immutable ChunkedVector{T,A<:AVector,N} <: AVector{T}
   data::Vector{A}
 end
@@ -50,14 +52,14 @@ end
     :(index_slow(xs, i))
 end
 
-function Base.getindex(xs::ChunkedVector, i::Integer)
+@inline function Base.getindex(xs::ChunkedVector, i::Integer)
   j, i′ = index(xs, i)
-  xs.data[j][i′]
+  @inbounds return xs.data[j][i′]
 end
 
 function Base.setindex!(xs::ChunkedVector, v, i::Integer)
   j, i′ = index(xs, i)
-  xs.data[j][i′] = v
+  @inbounds xs.data[j][i′] = v
 end
 
 Base.length(xs::ChunkedVector) = chunksize(xs)*(length(xs.data)-1)+length(xs.data[end])

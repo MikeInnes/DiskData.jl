@@ -65,3 +65,39 @@ end
 Base.length(xs::ChunkedVector) = chunksize(xs)*(length(xs.data)-1)+length(xs.data[end])
 
 Base.size(xs::ChunkedVector) = (length(xs),)
+
+# Iteration utils
+
+immutable ChunkIter{N}
+  max::Tuple{Int,Int}
+end
+
+chunksize{N}(::Type{ChunkIter{N}}) = N
+chunksize(it::ChunkIter) = chunksize(typeof(it))
+
+Base.start(::ChunkIter) = (1, 0)
+
+Base.done(it::ChunkIter, state) =
+  state[2] == it.max[2] && state[1] == it.max[1]
+
+@inline function _next(it::ChunkIter, last)
+  i, j = last
+  j == chunksize(it) ? (i+1, 1) : (i, j+1)
+end
+
+function Base.next(it::ChunkIter, last)
+  next = _next(it, last)
+  next, next
+end
+
+Base.length(it::ChunkIter) = (it.max[1]-1)*chunksize(it)+it.max[2]
+
+# ChunkVector iteration
+
+@iter xs::ChunkedVector ->
+  ChunkIter{chunksize(xs)}((length(xs.data), length(xs.data[end])))
+
+@inline function Base.next(xs::ChunkedVector, sub::SubIter)
+  i, j = _next(sub.iter, sub.state)
+  @inbounds return xs.data[i][j], SubIter(sub.iter, (i, j))
+end

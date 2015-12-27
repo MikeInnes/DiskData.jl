@@ -18,6 +18,8 @@ call{T}(::ChunkedVectorT{T}, a...) =
 chunksize{T,A,N}(::Type{ChunkedVector{T,A,N}}) = N
 chunksize(xs::ChunkedVector) = chunksize(typeof(xs))
 
+chunks(xs::ChunkedVector) = xs.data
+
 function makeroom!(xs::ChunkedVector)
   push!(xs.data, similar(xs.data[end], 0))
 end
@@ -94,8 +96,10 @@ Base.length(it::ChunkIter) = (it.max[1]-1)*chunksize(it)+it.max[2]
 
 # ChunkVector iteration
 
-@iter xs::ChunkedVector ->
+ChunkIter(xs::ChunkedVector) =
   ChunkIter{chunksize(xs)}((length(xs.data), length(xs.data[end])))
+
+@iter xs::ChunkedVector -> ChunkIter(xs)
 
 @inline function Base.next(xs::ChunkedVector, sub::SubIter)
   i, j = _next(sub.iter, sub.state)

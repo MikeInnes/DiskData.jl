@@ -9,6 +9,8 @@ end
 
 macro iter(ex)
   @capture(ex, x_::T_ -> it_) || error("Use @iter x::T -> y ...")
+  @capture(it, $x.f_) &&
+    return :(@forward $(esc(T)).$f Base.start, Base.next, Base.done)
   quote
     @inline function Base.start($x::$T)
       it = $it

@@ -35,7 +35,7 @@ end
 Base.size(v::DiskVector) = (v.length,)
 
 function Base.push!{T}(v::DiskVector{T}, x::T)
-  warn("pushing single value")
+  # warn("pushing single value")
   seekto(v, :end)
   if isbits(T)
     write(v.handle, x)
@@ -56,30 +56,29 @@ function Base.append!{T}(v::DiskVector{T}, xs::AbstractVector{T})
   return v
 end
 
-# The basic seek methods don't seem to be particularly smart about this, so we keep track of
-# where we are to avoid file system calls
 function seekto(v::DiskVector, i)
-  @assert isbits(eltype(v))
   if i == :end
     if v.pos ≤ v.length
       seekend(v.handle)
       v.pos = v.length+1
     end
   elseif v.pos ≠ i
+    @assert isbits(eltype(v))
     v.pos = i
     seek(v.handle, sizeof(eltype(v))*(i-1))
   end
 end
 
 function Base.getindex(v::DiskVector, i::Integer)
-  warn("reading single value")
+  # warn("reading single value")
   seekto(v, i)
   v.pos += 1
   return read(v.handle, eltype(v))
 end
 
 function Base.setindex!{T}(v::DiskVector{T}, x::T, i::Integer)
-  warn("writing single value")
+  @assert isbits(x)
+  # warn("writing single value")
   seekto(v, i)
   write(v.handle, x)
   v.pos += 1

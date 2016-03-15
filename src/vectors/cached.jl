@@ -14,8 +14,9 @@ function touch!{T}(c::CacheStack{T}, x::T)
   elseif c.stack[1] === x
     return x
   else
-    store!(c.stack[1])
+    cache = store!(c.stack[1])
     c.stack[1] = x
+    return load!(x, cache)
   end
   return load!(x)
 end
@@ -44,19 +45,31 @@ function load!(v::CacheVector)
   return v
 end
 
+function load!(v::CacheVector, cache)
+  if length(cache) == length(v.data)
+    copy!(cache, v.data)
+    v.view = cache
+    v.state = Loaded
+  else
+    return load!(v)
+  end
+  return load!(v)
+end
+
 function store!(v::CacheVector)
   isloaded(v) || return v
+  cache = v.view
   if v.state == Modified
     info("storing data")
     v.data[1:end] = slice(v.view, 1:endof(v.data))
-    if length(v.view) > length(v.data)
-      append!(v.data, slice(v.view, endof(v.data)+1:endof(v.view)))
+    if length(cache) > length(v.data)
+      append!(v.data, slice(cache, endof(v.data)+1:endof(cache)))
     end
     # TODO: catch shortened arrays as well
   end
   v.view = []
   v.state = Stored
-  return v
+  return cache
 end
 
 touch!(v::CacheVector) = touch!(v.cache, v)

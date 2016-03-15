@@ -92,8 +92,13 @@ function Base.copy!{T}(v::AbstractVector{T}, xs::DiskVector{T})
   return v
 end
 
-# Need the extra copy due to shared array data
-Base.collect(xs::DiskVector) = copy(copy!(Vector{eltype(xs)}(length(xs)), xs))
+function Base.collect(xs::DiskVector)
+  if isempty(xs)
+    Vector{eltype(xs)}()
+  else
+    copy!(Vector{eltype(xs)}(length(xs)), xs)
+  end
+end
 
 function Base.similar(v::DiskVector, n::Integer)
   @assert n == 0

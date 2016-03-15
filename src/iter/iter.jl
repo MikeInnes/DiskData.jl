@@ -25,37 +25,3 @@ macro iter(ex)
     end
   end |> esc
 end
-
-# Lazy Map
-
-immutable Map{F,T}
-  f::F
-  xs::T
-end
-
-@forward Map.xs Base.start, Base.done
-
-function Base.next(m::Map, state)
-  x, state = next(m.xs, state)
-  return m.f(x), state
-end
-
-# Test
-
-# export VecRef
-#
-# immutable VecRef{T}
-#   x::T
-# end
-#
-# @inline Base.start(x::VecRef, a...) = Base.start(x.x, a...)
-# @inline Base.next(x::VecRef, a...) = Base.next(x.x, a...)
-# @inline Base.done(x::VecRef, a...) = Base.done(x.x, a...)
-#
-# export VecRef2
-#
-# immutable VecRef2{T}
-#   x::T
-# end
-#
-# @iter x::VecRef2 -> x.x

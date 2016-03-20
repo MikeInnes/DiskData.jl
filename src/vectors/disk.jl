@@ -105,39 +105,4 @@ function Base.similar(v::DiskVector, n::Integer)
   DiskVector{eltype(v)}()
 end
 
-# Merge sort
-
-function merge{T}(xs::AVector{T}, ys::AVector{T})
-  v = DiskVector{T}()
-  ix, iy = 1, 1
-  nx, ny = length(xs), length(ys)
-  while true
-    if ix ≤ nx && (iy > ny || xs[ix] ≤ ys[iy])
-      push!(v, xs[ix])
-      ix += 1
-    elseif iy ≤ ny && (ix > nx || ys[iy] ≤ xs[ix])
-      push!(v, ys[iy])
-      iy += 1
-    else
-      break
-    end
-  end
-  return v
-end
-
-function Base.sort(xs::DiskVector)
-  n = 5*10^8 # ~ 4 GB
-  sort_mem(xs) = DiskVector(sort!(collect(xs)))
-  if length(xs) ≤ n
-    return sort_mem(xs)
-  else
-    left, right = slice(xs, 1:length(xs)÷2), slice(xs, length(xs)÷2+1:length(xs))
-    if length(left) ≤ n
-      return merge(sort_mem(left), sort_mem(right))
-    else
-      return merge(sort(DiskVector(left)), sort(DiskVector(right)))
-    end
-  end
-end
-
 # run(`open $(dirname(tempname()))`)

@@ -51,3 +51,42 @@ end
 @forward BigVector.data Base.size, Base.getindex, Base.setindex!, Base.push!, chunks
 
 @iter xs::BigVector -> xs.data
+
+# Merge sort
+
+function merge{T}(xs::AVector{T}, ys::AVector{T})
+  v = BigVector{T}()
+  ix, nx, iy, ny = 1, length(xs), 1, length(ys)
+  while true
+    if ix ≤ nx && (iy > ny || xs[ix] ≤ ys[iy])
+      push!(v, xs[ix])
+      ix += 1
+    elseif iy ≤ ny && (ix > nx || ys[iy] ≤ xs[ix])
+      push!(v, ys[iy])
+      iy += 1
+    else
+      break
+    end
+  end
+  return v
+end
+
+function sort_mem(xs)
+  ys = BigVector(sort!(copy(xs)))
+  gc()
+  return ys
+end
+
+function Base.sort(xs::BigVector)
+  n = 4*1024^3÷sizeof(eltype(xs))
+  if length(xs) ≤ n
+    return sort_mem(xs)
+  else
+    left, right = slice(xs, 1:length(xs)÷2), slice(xs, length(xs)÷2+1:length(xs))
+    if length(left) ≤ n
+      return merge(sort_mem(left), sort_mem(right))
+    else
+      return merge(sort(BigVector(left)), sort(BigVector(right)))
+    end
+  end
+end

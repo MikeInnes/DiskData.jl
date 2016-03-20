@@ -39,7 +39,7 @@ isloaded(v::CacheVector) = v.state ≠ Stored
 
 function load!(v::CacheVector)
   isloaded(v) && return v
-  info("loading data")
+  # info("loading data")
   v.view = collect(v.data)
   v.state = Loaded
   return v
@@ -60,7 +60,7 @@ function store!(v::CacheVector)
   isloaded(v) || return v
   cache = v.view
   if v.state == Modified
-    info("storing data")
+    # info("storing data")
     v.data[1:end] = slice(v.view, 1:endof(v.data))
     if length(cache) > length(v.data)
       append!(v.data, slice(cache, endof(v.data)+1:endof(cache)))

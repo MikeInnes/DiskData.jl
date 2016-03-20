@@ -42,6 +42,12 @@ end
 call{T}(::Type{BigVector{T}}, chunk::Integer = prevpow2(150*1024^2÷sizeof(T))) =
   BigVector{T,chunk}(CacheChunkVector{T,DiskVector{T},chunk}())
 
+function BigVector(xs)
+  v = BigVector{eltype(xs)}()
+  for x in xs push!(v, x) end
+  return v
+end
+
 @forward BigVector.data Base.size, Base.getindex, Base.setindex!, Base.push!, chunks
 
 @iter xs::BigVector -> xs.data

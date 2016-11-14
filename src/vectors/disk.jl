@@ -2,7 +2,7 @@ export DiskVector
 
 type DiskVector{T} <: AVector{T}
   length::Int
-  file::UTF8String
+  file::String
   handle::IOStream
   pos::Int
 end

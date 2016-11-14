@@ -7,7 +7,7 @@ type Circle{T}
 end
 
 Circle(xs) = Circle(xs, 0)
-call{T}(::Type{Circle{T}}) = Circle(T[])
+(::Type{Circle{T}}){T}() = Circle(T[])
 
 @forward Circle.xs Base.first, Base.last, Base.getindex, Base.push!
 

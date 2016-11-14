@@ -9,14 +9,14 @@ end
 
 typealias DiskVectorT{T} Type{DiskVector{T}}
 
-function call{T}(::DiskVectorT{T})
+function (::DiskVectorT{T}){T}()
   file = tempname()
   v = DiskVector{T}(0, file, open(file, "a+"), 1)
   finalizer(v, close)
   return v
 end
 
-function call{T}(::DiskVectorT{T}, xs)
+function (::DiskVectorT{T}){T}(xs)
   v = DiskVector{T}()
   for x in xs
     push!(v, x)

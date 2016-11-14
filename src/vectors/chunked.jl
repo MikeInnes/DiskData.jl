@@ -6,13 +6,13 @@ end
 
 typealias ChunkedVectorT{T,A,N} Type{ChunkedVector{T,A,N}}
 
-call{T,A,N}(::ChunkedVectorT{T,A,N}, data = A[A()]) =
+(::ChunkedVectorT{T,A,N}){T,A,N}(data = A[A()]) =
   ChunkedVector{T,A,N}(data)
 
-call{T,A}(::ChunkedVectorT{T,A}, data = A[A()]) =
+(::ChunkedVectorT{T,A}){T,A}(data = A[A()]) =
   ChunkedVector{T,A,128}(data)
 
-call{T}(::ChunkedVectorT{T}, a...) =
+(::ChunkedVectorT{T}){T}(a...) =
   ChunkedVector{T,Vector{T}}(a...)
 
 chunksize{T,A,N}(::Type{ChunkedVector{T,A,N}}) = N
